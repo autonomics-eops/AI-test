@@ -21,8 +21,15 @@ resource "azurerm_storage_account" "sa" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
-resource "azurerm_ai_foundry_workspace" "foundry" {
-  name                = var.aio_name
+resource "azapi_resource" "ai_foundry" {
+  type                = Microsoft.AI.Foundation/workspaces@2024-10-01-preview
+  name                = var.ai_foundry_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+  parent_id           = azurerm_resource_group.rg.id
+
+  body =jsoncode({
+    properties = {
+      publicNetworkAccess = "Enabled"
+      }
+  })
 }
