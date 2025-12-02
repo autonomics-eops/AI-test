@@ -17,6 +17,6 @@ variable "address_space" {
 variable "storage_name" {
   default = "aistoragelz123"
 }
-variable "aio_name" {
+variable "ai_foundry_name" {
   default = "ai-foundry-demo"
 }
