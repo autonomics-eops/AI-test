@@ -22,7 +22,7 @@ resource "azurerm_storage_account" "sa" {
   account_replication_type = "LRS"
 }
 resource "azapi_resource" "ai_foundry" {
-  type                = Microsoft.AI.Foundation/workspaces@2024-10-01-preview
+  type                = "Microsoft.AI.Foundation/workspaces@2024-10-01-preview"
   name                = var.ai_foundry_name
   location            = var.location
   parent_id           = azurerm_resource_group.rg.id
