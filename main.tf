@@ -27,9 +27,12 @@ resource "azapi_resource" "ai_foundry" {
   location            = var.location
   parent_id           = azurerm_resource_group.rg.id
 
-  body =jsoncode({
+  body =jsonencode({
     properties = {
-      publicNetworkAccess = "Enabled"
+      storageAccount = {
+        id = azurerm_storage_account.sa.id
       }
+      publicNetworkAccess = "Disabled"
+    }
   })
 }
