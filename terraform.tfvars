@@ -1,0 +1,5 @@
+location        = "eastus"
+rg_name         = "rg-ai-lz-demo"
+vnet_name       = "vnet-ai-demo"
+storage_name    = "aistoragedemo1234"
+aio_name        = "demo-aifoundry"
