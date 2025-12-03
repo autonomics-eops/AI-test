@@ -1,42 +1,38 @@
 name: Deploy AI Landing Zone
 on:
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        
+      - name: Terraform Init
+        run: terraform init
+        
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
+            -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
+            -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: |
-          {
-            "clientId": "${{ secrets.ARM_CLIENT_ID }}",
-            "clientSecret": "${{ secrets.ARM_CLIENT_SECRET }}",
-            "subscriptionId": "${{ secrets.ARM_SUBSCRIPTION_ID }}",
-            "tenantId": "${{ secrets.ARM_TENANT_ID }}"
-          }
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-
-    - name: Terraform Init
-      run: terraform init
-
-    - name: Terraform Plan
-      run: terraform plan \
-        -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
-        -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
-        -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
-        -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
-
-    - name: Terraform Apply
-      run: terraform apply -auto-approve \
-        -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
-        -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
-        -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
-        -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
+      - name: Terraform Apply
+        run: terraform apply -auto-approve \
+               -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+               -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
+               -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
+               -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
