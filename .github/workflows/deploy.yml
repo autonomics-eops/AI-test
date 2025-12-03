@@ -1,46 +1,42 @@
 name: Deploy AI Landing Zone
 on:
   workflow_dispatch:
+ 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
+ 
+ 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+ 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        
+        uses: hashicorp/setup-terraform@v2
+ 
       - name: Install Az PowerShell Module
         shell: pwsh
         run: |
           Install-Module -Name Az -Force -Scope CurrentUser -Repository PSGallery
           Import-Module Az
-
+ 
       - name: Azure Login using Service Principal
         shell: pwsh
         run: |
-          $clientId = "${{ secrets.ARM_CLIENT_ID }}"
-          $clientSecret = "${{ secrets.ARM_CLIENT_SECRET }}"
-          $tenantId = "${{ secrets.ARM_TENANT_ID }}"
-          $subscriptionId = "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+          $clientId = "${{ secrets.CLIENT_ID }}"
+          $clientSecret = "${{ secrets.CLIENT_SECRET }}"
+          $tenantId = "${{ secrets.TENANT_ID }}"
+          $subscriptionId = "${{ secrets.SUBSCRIPTION_ID }}"
           Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
           Set-AzContext -SubscriptionId $subscriptionId
-        
-      - name: Terraform Init
-        run: terraform init
-        
-      - name: Terraform Plan
+       
+      - name: Terraform Init and Apply
         run: |
-          terraform plan \
-            -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
-            -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
-            -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
-            -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve \
-               -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
-               -var "tenant_id=${{ secrets.ARM_TENANT_ID }}" \
-               -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
-               -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}"
+          terraform init
+          terraform apply -auto-approve
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
