@@ -28,10 +28,10 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          $clientId = $env:ARM_CLIENT_ID
-          $clientSecret = $env:ARM_CLIENT_SECRET
-          $tenantId = $env:ARM_TENANT_ID
-          $subscriptionId = $env:ARM_SUBSCRIPTION_ID
+          $clientId = "${{ secrets.ARM_CLIENT_ID }}"
+          $clientSecret = "${{ secrets.ARM_CLIENT_SECRET }}"
+          $tenantId = "${{ secrets.ARM_TENANT_ID }}"
+          $subscriptionId = "${{ secrets.ARM_SUBSCRIPTION_ID }}"
           Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
           Set-AzContext -SubscriptionId $subscriptionId
        
