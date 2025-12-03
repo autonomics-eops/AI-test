@@ -24,10 +24,10 @@ jobs:
       - name: Azure Login using Service Principal
         shell: pwsh
         run: |
-          $clientId = "${{ secrets.CLIENT_ID }}"
-          $clientSecret = "${{ secrets.CLIENT_SECRET }}"
-          $tenantId = "${{ secrets.TENANT_ID }}"
-          $subscriptionId = "${{ secrets.SUBSCRIPTION_ID }}"
+          $clientId = "${{ secrets.ARM_CLIENT_ID }}"
+          $clientSecret = "${{ secrets.ARM_CLIENT_SECRET }}"
+          $tenantId = "${{ secrets.ARM_TENANT_ID }}"
+          $subscriptionId = "${{ secrets.ARM_SUBSCRIPTION_ID }}"
           Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
           Set-AzContext -SubscriptionId $subscriptionId
        
@@ -36,7 +36,7 @@ jobs:
           terraform init
           terraform apply -auto-approve
         env:
-          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
