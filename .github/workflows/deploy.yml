@@ -11,13 +11,21 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Install Az PowerShell Module
+        shell: pwsh
+        run: |
+          Install-Module -Name Az -Force -Scope CurrentUser -Repository PSGallery
+          Import-Module Az
+
+      - name: Azure Login using Service Principal
+        shell: pwsh
+        run: |
+          $clientId = "${{ secrets.ARM_CLIENT_ID }}"
+          $clientSecret = "${{ secrets.ARM_CLIENT_SECRET }}"
+          $tenantId = "${{ secrets.ARM_TENANT_ID }}"
+          $subscriptionId = "${{ secrets.ARM_SUBSCRIPTION_ID }}"
+          Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
+          Set-AzContext -SubscriptionId $subscriptionId
         
       - name: Terraform Init
         run: terraform init
