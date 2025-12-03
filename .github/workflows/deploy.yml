@@ -7,13 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 180
 
+ 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-
+ 
       - name: Install Az PowerShell Module
         shell: pwsh
         run: |
@@ -22,11 +23,6 @@ jobs:
 
       - name: Azure Login using Service Principal
         shell: pwsh
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           $clientId = "${{ secrets.ARM_CLIENT_ID }}"
           $clientSecret = "${{ secrets.ARM_CLIENT_SECRET }}"
@@ -34,13 +30,13 @@ jobs:
           $subscriptionId = "${{ secrets.ARM_SUBSCRIPTION_ID }}"
           Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
           Set-AzContext -SubscriptionId $subscriptionId
-       
+        
       - name: Terraform Init and Apply
         run: |
           terraform init
           terraform apply -auto-approve
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          CLIENT_ID : ${{ secrets.ARM_CLIENT_ID }}
+          CLIENT_SECRET : ${{ secrets.ARM_CLIENT_SECRET }}
+          SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID}}
+          TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
