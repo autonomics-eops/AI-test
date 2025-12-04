@@ -28,17 +28,20 @@ jobs:
       #     $subscriptionId = "${{ secrets.SUBSCRIPTION_ID }}"
       #     Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
       #     Set-AzContext -SubscriptionId $subscriptionId
-
-
-        
-      - name: Azure Login (Service Principal)
+      
+      - name: Azure Login (Service Principal secret)
         uses: azure/login@v2
         with:
-          auth-type:       SERVICE_PRINCIPAL
-          client-id:       ${{ secrets.CLIENT_ID }}
-          tenant-id:       ${{ secrets.TENANT_ID }}
-          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
-          client-secret:   ${{ secrets.CLIENT_SECRET }}
+          auth-type: SERVICE_PRINCIPAL
+          creds: ${{ toJson({
+            clientId: secrets.CLIENT_ID,
+            tenantId: secrets.TENANT_ID,
+            subscriptionId: secrets.SUBSCRIPTION_ID,
+            clientSecret: secrets.CLIENT_SECRET
+          }) }}
+
+
+
 
 
       - name: Terraform Init and Apply
