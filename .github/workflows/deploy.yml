@@ -13,22 +13,33 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Install Az PowerShell Module
-        shell: pwsh
-        run: |
-          Install-Module -Name Az -Force -Scope CurrentUser -Repository PSGallery
-          Import-Module Az
+      # - name: Install Az PowerShell Module
+      #   shell: pwsh
+      #   run: |
+      #     Install-Module -Name Az -Force -Scope CurrentUser -Repository PSGallery
+      #     Import-Module Az
 
-      - name: Azure Login using Service Principal
-        shell: pwsh
-        run: |
-          $clientId = "${{ secrets.CLIENT_ID }}"
-          $clientSecret = "${{ secrets.CLIENT_SECRET }}"
-          $tenantId = "${{ secrets.TENANT_ID }}"
-          $subscriptionId = "${{ secrets.SUBSCRIPTION_ID }}"
-          Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
-          Set-AzContext -SubscriptionId $subscriptionId
+      # - name: Azure Login using Service Principal
+      #   shell: pwsh
+      #   run: |
+      #     $clientId = "${{ secrets.CLIENT_ID }}"
+      #     $clientSecret = "${{ secrets.CLIENT_SECRET }}"
+      #     $tenantId = "${{ secrets.TENANT_ID }}"
+      #     $subscriptionId = "${{ secrets.SUBSCRIPTION_ID }}"
+      #     Connect-AzAccount -ServicePrincipal -Tenant $tenantId -Credential (New-Object System.Management.Automation.PSCredential($clientId, (ConvertTo-SecureString $clientSecret -AsPlainText -Force)))
+      #     Set-AzContext -SubscriptionId $subscriptionId
+
+
         
+      - name: Azure Login (Service Principal)
+        uses: azure/login@v2
+        with:
+          auth-type:       SERVICE_PRINCIPAL
+          client-id:       ${{ secrets.CLIENT_ID }}
+          tenant-id:       ${{ secrets.TENANT_ID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+          client-secret:   ${{ secrets.CLIENT_SECRET }}
+
 
       - name: Terraform Init and Apply
         run: |
