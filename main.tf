@@ -21,18 +21,50 @@ resource "azurerm_storage_account" "sa" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
-resource "azapi_resource" "ai_foundry" {
-  type                = "Microsoft.AI.Foundation/workspaces@2024-10-01-preview"
-  name                = var.ai_foundry_name
-  location            = var.location
-  parent_id           = azurerm_resource_group.rg.id
 
-  body =jsonencode({
-    properties = {
-      storageAccount = {
-        id = azurerm_storage_account.sa.id
-      }
-      publicNetworkAccess = "Disabled"
+resource "azapi_resource" "ai_foundry" {
+  type                      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  name                      = var.ai_foundry_name
+  parent_id                 = azurerm_resource_group.rg.id
+  location                  = var.location
+  schema_validation_enabled = false
+
+  body = {
+    kind = "AIServices"
+    sku = {
+      name = "S0"
     }
-  })
+    identity = {
+      type = "SystemAssigned"
+    }
+    properties = {
+      disableLocalAuth      = false
+      allowProjectManagement = true
+      customSubDomainName   = var.ai_foundry_name
+    }
+  }
+}
+
+resource "azapi_resource" "aifoundry_deployment_gpt_4o" {
+  type      = "Microsoft.CognitiveServices/accounts/deployments@2023-05-01"
+  name      = "gpt-4o"
+  parent_id = azapi_resource.ai_foundry.id
+
+  body = {
+    sku = {
+      name     = "GlobalStandard"
+      capacity = 1
+    }
+    properties = {
+      model = {
+        format  = "OpenAI"
+        name    = "gpt-4o"
+        version = "2024-11-20"
+      }
+    }
+  }
+
+  depends_on = [
+    azapi_resource.ai_foundry
+  ]
 }
