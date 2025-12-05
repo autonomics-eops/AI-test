@@ -13,9 +13,9 @@ output "foundry_model_deployment_id" {
 }
 
 output "apim_private_endpoint_ip" {
-  value = azurerm_private_endpoint.apim_pe.private_service_connection[0].private_ip_address
+  value = jsondecode(azapi_resource.apim_private_endpoint.output).properties.ipConfigurations[0].properties.privateIPAddress
 }
 
 output "apim_name" {
-  value = azurerm_api_management.apim.name
+  value = azapi_resource.apim.name
 }
