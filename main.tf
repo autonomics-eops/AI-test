@@ -99,59 +99,73 @@ resource "azapi_resource" "aifoundry_deployment_gpt_4o" {
   ]
 }
 
-resource "azurerm_api_management" "apim" {
-  name                = var.apim_name
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
-  publisher_name      = var.apim_publisher_name
-  publisher_email     = var.apim_publisher_email
+#####################################################
+# APIM Standard V2 + Private Endpoint + Private DNS
+#####################################################
 
-  sku_name = "StandardV2" # Standard v2 SKU
+resource "azapi_resource" "apim" {
+  type                      = "Microsoft.ApiManagement/service@2023-05-01"
+  name                      = var.apim_name
+  parent_id                 = azurerm_resource_group.rg.id
+  location                  = var.location
+  schema_validation_enabled = false
 
-  protocols {
-    enable_http2 = true
+  body = {
+    identity = { type = "SystemAssigned" }
+    sku = { name = "Standard_V2", capacity = 1 }
+    properties = {
+      publisherEmail = var.apim_publisher_email
+      publisherName  = var.apim_publisher_name
+    }
   }
 
-  public_network_access_enabled = false  # Only Private Endpoint allowed
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  lifecycle { prevent_destroy = true }
 }
 
+# Create a Private Endpoint for APIM gateway
+resource "azapi_resource" "apim_private_endpoint" {
+  type       = "Microsoft.Network/privateEndpoints@2023-02-01"
+  name       = "${var.apim_name}-pe"
+  parent_id  = azurerm_resource_group.rg.id
+  location   = var.location
+
+  body = {
+    properties = {
+      subnet = { id = azurerm_subnet.default.id }  # or another dedicated subnet
+      privateLinkServiceConnections = [
+        {
+          name                          = "${var.apim_name}-pls"
+          privateLinkServiceId          = azapi_resource.apim.id
+          groupIds                      = ["gateway"]   # as per APIM Standard V2 private link docs
+        }
+      ]
+    }
+  }
+
+  depends_on = [
+    azapi_resource.apim
+  ]
+}
+
+# Private DNS zone for APIM (azure-api.net)
 resource "azurerm_private_dns_zone" "apim_dns" {
-  name                = "privatelink.azure-api.net"
+  name                = "azure-api.net"
   resource_group_name = azurerm_resource_group.rg.name
 }
 
+# Link DNS zone to VNet
 resource "azurerm_private_dns_zone_virtual_network_link" "apim_dns_link" {
-  name                  = "apim-dns-link"
+  name                  = "${var.apim_name}-dns-link"
   resource_group_name   = azurerm_resource_group.rg.name
   private_dns_zone_name = azurerm_private_dns_zone.apim_dns.name
   virtual_network_id    = azurerm_virtual_network.vnet.id
 }
 
-resource "azurerm_private_endpoint" "apim_pe" {
-  name                = "${var.apim_name}-pe"
-  location            = var.location
+# A-record for APIM inside Private DNS zone: map FQDN to the private IP from PE
+resource "azurerm_private_dns_a_record" "apim_dns_record" {
+  name                = var.apim_name  # e.g. "myapimservice"
+  zone_name           = azurerm_private_dns_zone.apim_dns.name
   resource_group_name = azurerm_resource_group.rg.name
-  subnet_id           = azurerm_subnet.default.id
-
-  private_service_connection {
-    name                           = "${var.apim_name}-gateconn"
-    is_manual_connection           = false
-    private_connection_resource_id = azurerm_api_management.apim.id
-    subresource_names              = ["gateway"]
-  }
+  ttl                 = 300
+  records             = [azapi_resource.apim_private_endpoint.properties[0].ipConfigurations[0].privateIpAddress]
 }
-
-resource "azurerm_private_dns_zone_group" "apim_pe_dns" {
-  name                = "${var.apim_name}-dns-group"
-  private_endpoint_id = azurerm_private_endpoint.apim_pe.id
-
-  private_dns_zone_configs {
-    name                  = "dnsconfig"
-    private_dns_zone_id   = azurerm_private_dns_zone.apim_dns.id
-  }
-}
-
