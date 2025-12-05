@@ -98,3 +98,60 @@ resource "azapi_resource" "aifoundry_deployment_gpt_4o" {
     azapi_resource.ai_foundry
   ]
 }
+
+resource "azurerm_api_management" "apim" {
+  name                = var.apim_name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  publisher_name      = var.apim_publisher_name
+  publisher_email     = var.apim_publisher_email
+
+  sku_name = "StandardV2" # Standard v2 SKU
+
+  protocols {
+    enable_http2 = true
+  }
+
+  public_network_access_enabled = false  # Only Private Endpoint allowed
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_private_dns_zone" "apim_dns" {
+  name                = "privatelink.azure-api.net"
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "apim_dns_link" {
+  name                  = "apim-dns-link"
+  resource_group_name   = azurerm_resource_group.rg.name
+  private_dns_zone_name = azurerm_private_dns_zone.apim_dns.name
+  virtual_network_id    = azurerm_virtual_network.vnet.id
+}
+
+resource "azurerm_private_endpoint" "apim_pe" {
+  name                = "${var.apim_name}-pe"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  subnet_id           = azurerm_subnet.default.id
+
+  private_service_connection {
+    name                           = "${var.apim_name}-gateconn"
+    is_manual_connection           = false
+    private_connection_resource_id = azurerm_api_management.apim.id
+    subresource_names              = ["gateway"]
+  }
+}
+
+resource "azurerm_private_dns_zone_group" "apim_pe_dns" {
+  name                = "${var.apim_name}-dns-group"
+  private_endpoint_id = azurerm_private_endpoint.apim_pe.id
+
+  private_dns_zone_configs {
+    name                  = "dnsconfig"
+    private_dns_zone_id   = azurerm_private_dns_zone.apim_dns.id
+  }
+}
+
