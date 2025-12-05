@@ -28,3 +28,19 @@ variable "storage_name" {
 variable "ai_foundry_name" {
   default = "ai-foundry-demo"
 }
+# APIM Variables
+variable "apim_name" {
+  type    = string
+  default = "apim-ai-demo"
+}
+
+variable "apim_publisher_name" {
+  type    = string
+  default = "AI Team"
+}
+
+variable "apim_publisher_email" {
+  type    = string
+  default = "akshansh.t@hcltech.com"
+}
+
