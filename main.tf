@@ -104,7 +104,7 @@ resource "azapi_resource" "aifoundry_deployment_gpt_4o" {
 #####################################################
 
 resource "azapi_resource" "apim" {
-  type                      = "Microsoft.ApiManagement/service@2023-05-01-preview"
+  type                      = "Microsoft.ApiManagement/service@2023-09-01-preview"
   name                      = var.apim_name
   parent_id                 = azurerm_resource_group.rg.id
   location                  = var.location
