@@ -115,7 +115,7 @@ resource "azapi_resource" "apim" {
       type = "SystemAssigned"
     }
     sku = {
-      name     = "Standard_V2"
+      name     = "Standard"
       capacity = 1
     }
     properties = {
