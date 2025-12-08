@@ -111,16 +111,24 @@ resource "azapi_resource" "apim" {
   schema_validation_enabled = false
 
   body = {
-    identity = { type = "SystemAssigned" }
-    sku = { name = "Standard_V2", capacity = 1 }
+    identity = {
+      type = "SystemAssigned"
+    }
+    sku = {
+      name     = "Standard_V2"
+      capacity = 1
+    }
     properties = {
       publisherEmail = var.apim_publisher_email
       publisherName  = var.apim_publisher_name
     }
   }
 
-  lifecycle { prevent_destroy = true }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
+
 
 # Create a Private Endpoint for APIM gateway
 resource "azapi_resource" "apim_private_endpoint" {
