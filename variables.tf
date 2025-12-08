@@ -30,7 +30,7 @@ variable "ai_foundry_name" {
 }
 variable "apim_name" {
   type    = string
-  default = "apim-demo"
+  default = "apim0-demo"
 }
 variable "apim_publisher_name" {
   type    = string
