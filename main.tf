@@ -164,12 +164,10 @@ resource "azurerm_private_dns_zone_virtual_network_link" "apim_dns_link" {
 # A-record for APIM inside Private DNS zone: map FQDN to the private IP from PE
 resource "azurerm_private_dns_a_record" "apim_dns_record" {
   name                = "apim"
-  zone_name           = azurerm_private_dns_zone.apim_dns_zone.name
+  zone_name           = azurerm_private_dns_zone.apim_dns.name
   resource_group_name = azurerm_resource_group.rg.name
   ttl                 = 300
   records = [
-    jsondecode(
-      azapi_resource.apim_private_endpoint.output
-    ).properties.ipConfigurations[0].properties.privateIPAddress
+   jsondecode(azapi_resource.apim_private_endpoint.output).properties.networkInterfaces[0].ipConfigurations[0].privateIPAddress
   ]
 }
